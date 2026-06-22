@@ -12,7 +12,9 @@ public interface CarRepository extends JpaRepository<Car, Long> {
 
     List<Car> findByStatus(CarStatus status);
 
-    List<Car> findByCarNameContainingIgnoreCase(String carName);
+    List<Car> findByCarNameContainingIgnoreCaseOrColorContainingIgnoreCase(String carName, String color);
 
     List<Car> findByCarModelYear(Integer carModelYear);
+
+    List<Car> findByCapacityGreaterThanEqual(Integer capacity);
 }
