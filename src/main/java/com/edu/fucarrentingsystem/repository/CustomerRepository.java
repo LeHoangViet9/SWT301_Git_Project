@@ -22,4 +22,9 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Optional<Customer> findByEmail( String email);
 
     Optional<Customer> findByMobile( String mobile);
+
+    Optional<Customer> findByIdentityCard( String identityCard);
+
+
+    Optional<Customer> findByLiCustomercenceNumber(String licenceNumber);
 }
