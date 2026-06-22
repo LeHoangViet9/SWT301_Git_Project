@@ -25,4 +25,8 @@ public class CarProducer {
 
     @Column(nullable = false)
     private String country;
+
+   y    public String getFullInfo() {
+        return producerName + " - " + country;
+    }
 }
