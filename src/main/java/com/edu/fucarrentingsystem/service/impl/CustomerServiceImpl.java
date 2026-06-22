@@ -7,6 +7,7 @@ import com.edu.fucarrentingsystem.repository.CustomerRepository;
 import com.edu.fucarrentingsystem.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,72 +18,56 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<CustomerResponse> getAllCustomers() {
-        return customerRepository.findAll()
-                .stream()
-                .map(this::convertToResponse)
-                .toList();
-        List<Customer> customers = customerRepository.findAll();
-        return customers.stream()
-                .map(this::convertToResponse)
+        return customerRepository.findAll().stream()
+                .map(this::convertToResponse) // Tái sử dụng method map để code ngắn gọn
                 .toList();
     }
 
     @Override
-    public CustomerResponse createCustomer(CustomerRequest customerRequest) {
-
-        if (customerRepository.existsByEmail(customerRequest.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        if (customerRepository.existsByMobile(customerRequest.getMobile())) {
+    @Transactional
+    public CustomerResponse createCustomer(CustomerRequest request) {
+        // Validate dữ liệu đầu vào trước khi tạo mới
+        if (customerRepository.existsByMobile(request.getMobile())) {
             throw new IllegalArgumentException("Mobile number already exists");
         }
-
-        if (customerRepository.existsByIdentityCard(customerRequest.getIdentityCard())) {
+        if (customerRepository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        if (customerRepository.existsByIdentityCard(request.getIdentityCard())) {
             throw new IllegalArgumentException("Identity card already exists");
         }
-
-        if (customerRepository.existsByLicenceNumber(customerRequest.getLicenceNumber())) {
+        if (customerRepository.existsByLicenceNumber(request.getLicenceNumber())) {
             throw new IllegalArgumentException("Licence number already exists");
         }
 
         Customer customer = new Customer();
-        mapRequestToCustomer(customerRequest, customer);
+        updateCustomerFields(customer, request);
 
         Customer savedCustomer = customerRepository.save(customer);
-
         return convertToResponse(savedCustomer);
     }
 
     @Override
-    public CustomerResponse updateCustomer(Long id, CustomerRequest customerRequest) {
-
+    @Transactional
+    public CustomerResponse updateCustomer(Long id, CustomerRequest request) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
-        customerRepository.findByEmail(customerRequest.getEmail())
-                .ifPresent(c -> {
-                    if (!c.getCustomerID().equals(id)) {
-                        throw new IllegalArgumentException("Email already exists");
-                    }
-                });
+        customerRepository.findByEmail(request.getEmail())
+                .filter(c -> !c.getCustomerID().equals(id))
+                .ifPresent(c -> { throw new IllegalArgumentException("Email already exists"); });
 
-        customerRepository.findByMobile(customerRequest.getMobile())
-                .ifPresent((Customer c) -> {
-                    if(!c.getCustomerID().equals(id)) throw new IllegalArgumentException("Mobile number already exists");
-                });
+        customerRepository.findByMobile(request.getMobile())
+                .filter(c -> !c.getCustomerID().equals(id))
+                .ifPresent(c -> { throw new IllegalArgumentException("Mobile number already exists"); });
 
-        customer.setCustomerName(customerRequest.getCustomerName());
-        customer.setMobile(customerRequest.getMobile());
-        customer.setEmail(customerRequest.getEmail());
-        customer.setBirthday(customerRequest.getBirthday());
-        customer.setIdentityCard(customerRequest.getIdentityCard());
-        customer.setLicenceNumber(customerRequest.getLicenceNumber());
-        customer.setLicenceDate(customerRequest.getLicenceDate());
+        // Cập nhật các trường thông tin
+        updateCustomerFields(customer, request);
 
         if (customer.getAccount() != null) {
-            customer.getAccount().setAccountName(customerRequest.getEmail());
+            customer.getAccount().setAccountName(request.getEmail());
         }
 
         Customer savedCustomer = customerRepository.save(customer);
@@ -90,12 +75,24 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional
     public void deleteCustomer(Long id) {
-        Customer customer=customerRepository.findById(id).orElseThrow(()->new IllegalArgumentException("Customer not found"));
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
         customerRepository.delete(customer);
     }
 
-    private CustomerResponse convertToResponse(Customer customer){
+    private void updateCustomerFields(Customer customer, CustomerRequest request) {
+        customer.setCustomerName(request.getCustomerName());
+        customer.setMobile(request.getMobile());
+        customer.setEmail(request.getEmail());
+        customer.setBirthday(request.getBirthday());
+        customer.setIdentityCard(request.getIdentityCard());
+        customer.setLicenceNumber(request.getLicenceNumber());
+        customer.setLicenceDate(request.getLicenceDate());
+    }
+
+    private CustomerResponse convertToResponse(Customer customer) {
         return CustomerResponse.builder()
                 .id(customer.getCustomerID())
                 .customerName(customer.getCustomerName())
