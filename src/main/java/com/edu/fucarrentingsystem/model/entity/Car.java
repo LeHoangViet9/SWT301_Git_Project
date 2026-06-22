@@ -41,6 +41,7 @@ public class Car {
     @Column(nullable = false)
     private BigDecimal rentPrice;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CarStatus status;
 
