@@ -18,18 +18,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public List<CustomerResponse> getAllCustomers() {
         List<Customer> customers = customerRepository.findAll();
-        return customers.stream().map(customer -> {
-            return CustomerResponse.builder()
-                    .id(customer.getCustomerID())
-                    .customerName(customer.getCustomerName())
-                    .email(customer.getEmail())
-                    .mobile(customer.getMobile())
-                    .birthday(customer.getBirthday())
-                    .identityCard(customer.getIdentityCard())
-                    .licenceNumber(customer.getLicenceNumber())
-                    .licenceDate(customer.getLicenceDate())
-                    .build();
-        }).toList();
+        return customers.stream()
+                .map(this::convertToResponse)
+                .toList();
     }
 
     @Override
