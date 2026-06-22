@@ -13,9 +13,17 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     Optional<Account> findByAccountName(String accountName);
 
+    Optional<Account> findByIdAndRole(Long id, Role role);
+
     List<Account> findByRole(Role role);
+
+    List<Account> findByAccountNameContainingIgnoreCase(String accountName);
 
     boolean existsByAccountName(String accountName);
 
     boolean existsByRole(Role role);
+
+    long countByRole(Role role);
+
+    void deleteByAccountName(String accountName);
 }
