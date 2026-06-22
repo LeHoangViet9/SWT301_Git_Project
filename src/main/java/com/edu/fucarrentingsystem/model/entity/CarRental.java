@@ -1,10 +1,7 @@
 package com.edu.fucarrentingsystem.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,10 +9,8 @@ import java.time.LocalDate;
 @Entity
 @Data
 @Table(name = "car_rentals")
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
 public class CarRental {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long rentalID;
@@ -39,4 +34,20 @@ public class CarRental {
 
     @Column(nullable = false)
     private String status;
+
+    
+    public long getRentalDays() {
+        return returnDate.toEpochDay() - pickupDate.toEpochDay();
+    }
+
+    
+    public BigDecimal getTotalPrice() {
+        long days = getRentalDays();
+        return rentPrice.multiply(BigDecimal.valueOf(days));
+    }
+
+  
+    public boolean isActive() {
+        return "RENTING".equalsIgnoreCase(status);
+    }
 }
